@@ -54,3 +54,7 @@ def normalize_action(action):
     action[CONFIGURABLE_COLS.index('t_value4')] = (action[CONFIGURABLE_COLS.index('t_value4')].clip(20,36) - 20) / 16
 
     return action
+
+def generate_sensible_actions(state):
+    prev_action = state[-1]
+    prev_action

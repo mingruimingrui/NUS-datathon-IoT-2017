@@ -1,5 +1,5 @@
 """
-taken from https://github.com/mingruimingrui/myEnv/blob/master/Env.py
+Used one of my old projects https://github.com/mingruimingrui/myEnv/blob/master/Env.py
 and made some edits
 currently this does not work like how a proper env should
 there is no taking of actions, since all actions are pre defined
