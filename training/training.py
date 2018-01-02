@@ -6,54 +6,67 @@ file_path = os.path.realpath(__file__)
 dir_path = os.path.dirname(os.path.dirname(file_path))
 sys.path.append(dir_path)
 
+from time import time
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
 from myGym.Env import Env
 from myGym.Memory import Memory
-# from myModel.Agent import GreedyPolicyAgent
-# from myModel.Policy import ConvPolicy
+from myModel.Agent import GreedyPolicyAgent
+from myModel.Policy import SimplePolicy, ConvPolicy
 
 from util.util import *
 from util.const import *
 
+N_EPISODE = 200
+LR = 0.005 # 0.001
+GAMMA = 0.9
+BATCH_SIZE = 32
+BATCH_PER_EP = 4
+
+JSON_FILE = 'myModel/model/convModel.json'
+WEIGHT_FILE = 'myModel/model/convWeights.h5'
+
 def main():
-    hist = {'chhc':[], 'cwhc':[], 'pc':[], 'COP': []}
+    print('Starting training.py\n')
 
-    choice = np.random.choice(len(DATE_FOLDERS))
-    choice_date_folder = DATE_FOLDERS[choice]
-    env = Env(choice_date_folder)
+    hist = {'loss':[], 'val_loss':[], 'ep_n':0}
 
-    cur_state = env.cur_state
-    next_action = env.get_next_action()
-    done = False
+    memory = Memory(max_size=10000)
+    policy = SimplePolicy(learning_rate=LR)
+    policy.save_model(JSON_FILE, WEIGHT_FILE)
+    policy.compile()
 
-    while not done:
-        env.get_next_action()
-        next_state, reward, chhc, cwhc, pc, done = env.step()
-        if pc > MIN_PC_CUTOFF:
-            hist['chhc'].append(chhc)
-            hist['cwhc'].append(cwhc)
-            hist['pc'].append(pc)
-            hist['COP'].append(reward)
+    while memory.get_size() < 10000:
+        date_folder_name = np.random.choice(TRAIN_FOLDERS)
+        temp_memory = []
 
-    x = range(len(hist['chhc']))
-    plt.plot(x, hist['chhc'])
-    plt.figure()
-    plt.plot(x, hist['cwhc'])
-    plt.figure()
-    plt.plot(x, hist['pc'])
-    plt.figure()
-    plt.plot(x, hist['COP'])
-    plt.figure()
-    plt.scatter(
-        np.array(hist['chhc']) + np.array(hist['cwhc']),
-        hist['pc'],
-        c = hist['COP']
-    )
-    plt.show()
+        env = Env(date_folder_name, verbose=None)
+        cur_state = env.cur_state
+        cur_action = env.get_cur_action()
 
+        done = False
 
-if __name__ == '__main__':
-    main()
+        while not done:
+            next_state, reward, _, cw_hcr, pc, done = env.step()
+
+            if not done:
+                next_action = env.get_cur_action
+            else:
+                next_action = None
+
+            if (reward is not None) & (pc > MIN_PC_CUTOFF):
+                temp_memory.append((cur_state, cur_action, reward, cw_hcr, pc, done))
+            else:
+                temp_memory.append((cur_state, cur_action, np.nan, np.nan, np.nan, done))
+
+            cur_state = next_state
+            cur_action = next_action
+
+        for i in range(len(temp_memory) - 5):
+            parital_rewards = list(map(lambda x: x[2], temp_memory[i:(i+5)]))
+            partial_cwhcr = list()
+            if np.all(~np.isnan(parital_rewards)):
+                memory.append((cur_state, cur_action, reward, cw_hcr, pc, done))

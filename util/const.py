@@ -16,6 +16,7 @@ CONFIGURABLE_COLS = [
     'c_flowRate', 'e_flowRate',
     't_value1', 't_value2', 't_value3', 't_value4'
 ]
+COL_IN_ACTION = np.array([(c in CONFIGURABLE_COLS) for c in COLS_TO_USE])
 
 # when power consumption is too low, it's likely an outlier
 MIN_PC_CUTOFF = 3e4

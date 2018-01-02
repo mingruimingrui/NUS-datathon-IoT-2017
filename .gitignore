@@ -104,3 +104,5 @@ ENV/
 # my stuff
 stashed/
 data/
+myModel/model/*.json
+myModel/model/*.h5

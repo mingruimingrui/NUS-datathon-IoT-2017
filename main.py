@@ -27,11 +27,14 @@ def main():
     while not done:
         env.get_next_action()
         next_state, reward, chhc, cwhc, pc, done = env.step()
-        if pc > MIN_PC_CUTOFF:
+
+        if (pc > MIN_PC_CUTOFF):
             hist['chhc'].append(chhc)
             hist['cwhc'].append(cwhc)
             hist['pc'].append(pc)
             hist['COP'].append(reward)
+
+        cur_state = next_state
 
     x = range(len(hist['chhc']))
     plt.plot(x, hist['chhc'])
